@@ -3,17 +3,25 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
-//Story represents the JSON field
-type Story struct {
-	Title   string            `json:"title"`
-	Story   []string          `json:"story"`
-	Options map[string]string `json:"options"`
+//Adventure represents the JSON field for whole story adventure
+type Adventure struct {
+	Title   string   `json:"title"`
+	Story   []string `json:"story"`
+	Options []Option `json:"options"`
 }
 
+//Option represents the option data for story.json
+type Option struct {
+	Text string `json:"text"`
+	Arc  string `json:"arc"`
+}
+
+//Story make map of adventure
+//Create this so we're not doing repetitive map[string]Adventure
+type Story map[string]Adventure
 
 //OpenJsonFile open the json file
 //return *File
@@ -29,29 +37,23 @@ func OpenJsonFile(path string) *os.File {
 	return jsonFile
 }
 
-func main() {
-	//get json file
-	jsonFile := OpenJsonFile("tools/story.json")
+// GetJSONData read the json file and return it
+// return []byte because ReadAll() always return []byte
+func GetStory(path string) Story {
+	var story Story
 
-	//ioutil.ReadAll() read all the jsonFile data
-	//return it as a []byte
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	file := OpenJsonFile(path)
+	decoder := json.NewDecoder(file)
 
-	if err != nil {
+	if err := decoder.Decode(&story); err != nil {
 		panic(err)
 	}
 
-	var story map[string]Story
+	return story
+}
 
-	//Unmarshal parses the JSON-encoded data and stores it in story variable
-	json.Unmarshal(byteValue, &story)
+func main() {
+	story := GetStory("story/story.json")
 
-	for key, value := range story {
-		fmt.Println(key)
-		fmt.Println("title = " + value.Title)
-
-		for _, s := range value.Story {
-			fmt.Println(s)
-		}
-	}
+	fmt.Println(story)
 }
